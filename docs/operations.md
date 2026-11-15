@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | `bin/identity-link` | `cmd/server` | gRPC server |
 | `go run ./cmd/migrate` | `cmd/migrate` | Schema migration command |
-| Docker image | `Dockerfile` | Alpine runtime with a non-root user |
+| Docker image | `Dockerfile` | Alpine runtime with the server and migration binaries, running as a non-root user |
 
 The server does not run migrations. Migrations are always an explicit deployment step.
 
@@ -116,8 +116,9 @@ Notes:
 - The container runs as UID/GID `65532`.
 - `DATABASE_URL` must be reachable from the container.
 - On Linux, `host.docker.internal` requires `--add-host=host.docker.internal:host-gateway`.
-- Run migrations separately; the image does not include the migrate binary.
-- Build the migration binary with `go build -o bin/migrate ./cmd/migrate` if it is needed inside a deployment image.
+- The image includes both `/usr/local/bin/identity-link` and `/usr/local/bin/identity-link-migrate`.
+- Run migrations separately with `--entrypoint /usr/local/bin/identity-link-migrate ... up`; the server never migrates at startup.
+- The image defaults to the server entrypoint.
 
 ## Health checks
 

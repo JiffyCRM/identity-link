@@ -216,13 +216,26 @@ The script installs pinned `protoc-gen-go` and `protoc-gen-go-grpc` versions and
 
 ```bash
 make docker-build
+```
+
+The image contains the server and migration binaries. Run migrations with:
+
+```bash
+docker run --rm --entrypoint /usr/local/bin/identity-link-migrate \
+  -e DATABASE_URL='postgres://identity_link:identity_link@host.docker.internal:5433/identity_link?sslmode=disable' \
+  identity-link:<version> up
+```
+
+Start the server with:
+
+```bash
 docker run --rm -p 50051:50051 \
   -e DATABASE_URL='postgres://identity_link:identity_link@host.docker.internal:5433/identity_link?sslmode=disable' \
   -e EMAIL_HMAC_SECRET='replace-this-with-at-least-32-random-bytes' \
   identity-link:<version>
 ```
 
-Migrations are not run automatically by the server. Run `make migrate` before starting the service.
+Migrations are not run automatically by the server. Run the migration command before starting the service.
 
 `DATABASE_URL` must be reachable from inside the container. On Linux, add `--add-host=host.docker.internal:host-gateway` if using the compose Postgres from a container. Deployment details are in [docs/operations.md](docs/operations.md).
 
