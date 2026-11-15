@@ -85,16 +85,25 @@ Start Postgres (container name `identity-link-postgres`, host port `5433`):
 docker compose up -d
 ```
 
-Export configuration (replace the secret with a random value of at least 32 bytes):
+Dev secrets are managed in Infisical. The repository is linked to the `jiffycrm` project through `.infisical.yaml`.
+
+```bash
+infisical login
+infisical init     # first time only; select jiffycrm
+```
+
+The Infisical `dev` environment must contain `DATABASE_URL` and `EMAIL_HMAC_SECRET`. Then apply migrations and start the server:
+
+```bash
+infisical secrets-manager run --env=dev -- make migrate
+infisical secrets-manager run --env=dev -- make run
+```
+
+Without Infisical, set the variables manually:
 
 ```bash
 export DATABASE_URL='postgres://identity_link:identity_link@localhost:5433/identity_link?sslmode=disable'
 export EMAIL_HMAC_SECRET='replace-this-with-at-least-32-random-bytes'
-```
-
-Apply migrations and start the server:
-
-```bash
 make migrate
 make run
 ```
@@ -104,7 +113,7 @@ Generate a suitable secret with `openssl rand -base64 48`.
 Roll back the latest migration with:
 
 ```bash
-DATABASE_URL="$DATABASE_URL" go run ./cmd/migrate down
+infisical secrets-manager run --env=dev -- go run ./cmd/migrate down
 ```
 
 ## API summary
