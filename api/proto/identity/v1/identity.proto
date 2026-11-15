@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package identity.v1;
+
+option go_package = "github.com/JiffyCRM/identity-link/api/identity/v1;identityv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service IdentityService {
+  // Main entry point used by OAuth callback
+  rpc GetOrCreate (GetOrCreateRequest) returns (User);
+
+  // Lookup by provider identity
+  rpc GetByProvider (GetByProviderRequest) returns (User);
+
+  // Lookup by internal ID
+  rpc GetByUserID (GetByUserIDRequest) returns (User);
+
+  // For invitation claiming / email existence check
+  // Returns user_id if the email is known, otherwise NotFound
+  rpc FindByEmail (FindByEmailRequest) returns (User);
+
+  // Explicit linking (optional, GetOrCreate can also link)
+  rpc LinkProvider (LinkProviderRequest) returns (User);
+
+  rpc UnlinkProvider (UnlinkProviderRequest) returns (google.protobuf.Empty);
+
+  // List providers attached to a user (no email data)
+  rpc ListProviders (ListProvidersRequest) returns (ListProvidersResponse);
+}
+
+message User {
+  string id = 1;                           // internal_user_id
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message ProviderAccount {
+  string id = 1;
+  string provider = 2;
+  string provider_subject = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message GetOrCreateRequest {
+  string provider = 1;
+  string provider_subject = 2;
+  string email = 3;                        // will be hashed internally
+}
+
+message GetByProviderRequest {
+  string provider = 1;
+  string provider_subject = 2;
+}
+
+message GetByUserIDRequest {
+  string user_id = 1;
+}
+
+message FindByEmailRequest {
+  string email = 1;                        // will be hashed internally
+}
+
+message LinkProviderRequest {
+  string user_id = 1;
+  string provider = 2;
+  string provider_subject = 3;
+  string email = 4;                        // must match the user's existing email hash
+}
+
+message UnlinkProviderRequest {
+  string user_id = 1;
+  string provider = 2;
+  string provider_subject = 3;
+}
+
+message ListProvidersRequest {
+  string user_id = 1;
+}
+
+message ListProvidersResponse {
+  repeated ProviderAccount providers = 1;
+}
